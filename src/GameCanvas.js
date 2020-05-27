@@ -1,20 +1,6 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useLayoutEffect, useCallback } from 'react';
 
-const bufferA = [
-  [true, false, false, false, false],
-  [false, true, true, false, false],
-  [true, true, false, false, false],
-  [false, false, false, false, false],
-  [false, false, false, false, false]
-];
-
-const bufferB = [
-  [false, false, false, false, false],
-  [false, false, false, false, false],
-  [false, false, false, false, false],
-  [false, false, false, false, false],
-  [false, false, false, false, false]
-];
+import useBufferGrid from './useBufferGrid';
 
 const computeNextState = (prev, next) => {
   next.forEach((row, i) => {
@@ -29,8 +15,6 @@ const computeNextState = (prev, next) => {
       }
     });
   });
-  // console.log('prev', prev);
-  // console.log('next', next);
 };
 
 const totalNeighbors = (x, y, prev) => {
@@ -48,33 +32,43 @@ const getOffsetNeighbor = (offset, x, y, prev) => {
   return prev[yPos][xPos];
 };
 
-// const buffers = [bufferA, bufferB];
-
-const cellSize = 40;
-
 const GameCanvas = () => {
-  const [currBuffer, setCurrBuffer] = useState(bufferA);
   const [generation, setGeneration] = useState(0);
 
+  const [cellSize, setCellSize] = useState(0);
+  const [cellQuantity] = useState(20);
+
+  const { grid: bufferA } = useBufferGrid(cellQuantity);
+  const { grid: bufferB } = useBufferGrid(cellQuantity);
+
+  const onBuffer = useCallback(() => {
+    return generation % 2 === 0 ? bufferA : bufferB;
+  }, [generation, bufferA, bufferB]);
+
+  const offBuffer = useCallback(() => {
+    return generation % 2 === 1 ? bufferA : bufferB;
+  }, [generation, bufferA, bufferB]);
+
   const canvasRef = useRef(null);
-  useEffect(() => {
-    drawState(canvasRef.current, currBuffer);
-  }, [currBuffer]);
+  const containerRef = useRef(null);
+  useLayoutEffect(() => {
+    const { height, width } = containerRef.current.getBoundingClientRect();
+    canvasRef.current.height = height;
+    canvasRef.current.width = width;
+    setCellSize(width / cellQuantity);
+  }, [cellQuantity]);
 
   useEffect(() => {
-    if (generation % 2 === 0) {
-      console.log('a => b');
-      computeNextState(bufferA, bufferB);
-    } else {
-      console.log('b => a');
-      computeNextState(bufferB, bufferA);
-    }
-  }, [generation]);
+    drawState(canvasRef.current, onBuffer(), cellSize);
+  }, [cellSize, onBuffer]);
+
+  useEffect(() => {
+    computeNextState(onBuffer(), offBuffer());
+  }, [generation, onBuffer, offBuffer]);
 
   const incrementGen = () => {
     const nextGen = generation + 1;
     setGeneration(nextGen);
-    setCurrBuffer(nextGen % 2 ? bufferB : bufferA);
   };
 
   const handleCanvasClick = (e) => {
@@ -83,15 +77,17 @@ const GameCanvas = () => {
     const row = Math.floor((e.clientY - top) / cellSize);
     const col = Math.floor((e.clientX - left) / cellSize);
 
-    currBuffer[row][col] = !currBuffer[row][col];
-    drawState(canvasRef.current, currBuffer);
-    computeNextState(currBuffer, generation % 2 === 0 ? bufferB : bufferA);
+    onBuffer()[row][col] = !onBuffer()[row][col];
+    drawState(canvasRef.current, onBuffer(), cellSize);
+    computeNextState(onBuffer(), offBuffer());
   };
 
   return (
     <>
-      <canvas ref={canvasRef} width={200} height={200} onClick={handleCanvasClick} />
-      <div>
+      <div ref={containerRef} className="canvas-container">
+        <canvas ref={canvasRef} width={200} height={200} onClick={handleCanvasClick} className="canvas" />
+      </div>
+      <div className="controls">
         <p>{generation}</p>
         <button type="button" onClick={incrementGen}>step</button>
       </div>
@@ -99,15 +95,15 @@ const GameCanvas = () => {
   );
 };
 
-const drawState = (canvas, gameBuffer) => {
+const drawState = (canvas, gameBuffer, cellSize) => {
   const ctx = canvas.getContext('2d');
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = 'orange';
-  gameBuffer.forEach((row, i) => {
-    row.forEach((e, j) => {
-      if (e) {
-        ctx.fillRect(j * cellSize, i * cellSize, cellSize, cellSize);
+  gameBuffer.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
       }
     });
   });
