@@ -2,44 +2,14 @@ import React, { useRef, useEffect, useState, useLayoutEffect, useCallback } from
 
 import useBufferGrid from './useBufferGrid';
 
-const computeNextState = (prev, next) => {
-  next.forEach((row, i) => {
-    row.forEach((_, j) => {
-      const neighbors = totalNeighbors(j, i, prev);
-      if (prev[i][j] && (neighbors < 2 || neighbors > 3)) {
-        next[i][j] = false;
-      } else if (!prev[i][j] && neighbors === 3) {
-        next[i][j] = true;
-      } else {
-        next[i][j] = prev[i][j];
-      }
-    });
-  });
-};
-
-const totalNeighbors = (x, y, prev) => {
-  const neighborOffsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
-  const total = neighborOffsets.reduce((acc, offset) => {
-    return acc + (getOffsetNeighbor(offset, x, y, prev) ? 1 : 0);
-  }, 0);
-  return total;
-};
-
-const getOffsetNeighbor = (offset, x, y, prev) => {
-  // ((n % m) + m) % m;
-  const yPos = (((offset[0] + y) % prev.length) + prev.length) % prev.length;
-  const xPos = (((offset[1] + x) % prev[0].length) + prev[0].length) % prev[0].length;
-  return prev[yPos][xPos];
-};
-
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
 
   const [cellSize, setCellSize] = useState(0);
   const [cellQuantity] = useState(20);
 
-  const { grid: bufferA } = useBufferGrid(cellQuantity);
-  const { grid: bufferB } = useBufferGrid(cellQuantity);
+  const bufferA = useBufferGrid(cellQuantity);
+  const bufferB = useBufferGrid(cellQuantity);
 
   const onBuffer = useCallback(() => {
     return generation % 2 === 0 ? bufferA : bufferB;
@@ -59,11 +29,11 @@ const GameCanvas = () => {
   }, [cellQuantity]);
 
   useEffect(() => {
-    drawState(canvasRef.current, onBuffer(), cellSize);
+    drawState(canvasRef.current, onBuffer().grid, cellSize);
   }, [cellSize, onBuffer]);
 
   useEffect(() => {
-    computeNextState(onBuffer(), offBuffer());
+    offBuffer().computeNext(onBuffer().grid);
   }, [generation, onBuffer, offBuffer]);
 
   const incrementGen = () => {
@@ -77,9 +47,9 @@ const GameCanvas = () => {
     const row = Math.floor((e.clientY - top) / cellSize);
     const col = Math.floor((e.clientX - left) / cellSize);
 
-    onBuffer()[row][col] = !onBuffer()[row][col];
-    drawState(canvasRef.current, onBuffer(), cellSize);
-    computeNextState(onBuffer(), offBuffer());
+    onBuffer().grid[row][col] = !onBuffer().grid[row][col];
+    drawState(canvasRef.current, onBuffer().grid, cellSize);
+    offBuffer().computeNext(onBuffer().grid);
   };
 
   return (
