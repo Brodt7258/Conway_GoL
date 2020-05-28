@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useLayoutEffect } from 'react';
 
 import useDoubleBuffer from './useDoubleBuffer';
-import useCanvas from './useCanvas';
+import useCellCanvas from './useCellCanvas';
+import useGridCanvas from './useGridCanvas';
 
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
+
   const [cellQuantity] = useState(50);
+  const [cellSize, setCellSize] = useState(10);
+
   const [running, setRunning] = useState(null);
 
   const [seed, setSeed] = useState('');
   const [density, setDensity] = useState(0.2);
+
+  const containerRef = useRef(null);
 
   const {
     currBuffer,
@@ -18,7 +24,20 @@ const GameCanvas = () => {
     genRandomMatrix,
     clearMatrix
   } = useDoubleBuffer(generation, cellQuantity, { seed, density });
-  const [canvasRef, containerRef, mapPixelToCell, toggleRect] = useCanvas(currBuffer, cellQuantity);
+  const [cellCanvasRef, mapPixelToCell, toggleRect] = useCellCanvas(currBuffer, cellSize);
+  const [gridCanvasRef] = useGridCanvas(cellSize);
+
+  useLayoutEffect(() => {
+    const { height, width } = containerRef.current.getBoundingClientRect();
+
+    cellCanvasRef.current.height = height;
+    cellCanvasRef.current.width = width;
+
+    gridCanvasRef.current.height = height;
+    gridCanvasRef.current.width = width;
+
+    setCellSize(width / cellQuantity);
+  }, [cellQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef]);
 
   const incrementGen = () => {
     setGeneration((prev) => prev + 1);
@@ -61,7 +80,8 @@ const GameCanvas = () => {
   return (
     <>
       <div ref={containerRef} className="canvas-container">
-        <canvas ref={canvasRef} onClick={handleCanvasClick} className="canvas" />
+        <canvas ref={cellCanvasRef} onClick={handleCanvasClick} className="canvas" />
+        <canvas ref={gridCanvasRef} onClick={handleCanvasClick} className="canvas" />
       </div>
       <div className="controls">
         <p>{generation}</p>

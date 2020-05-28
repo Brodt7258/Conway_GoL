@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 
 const drawState = (gameBuffer, canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
@@ -25,18 +25,8 @@ const toggleRect = (canvas, cellSize, cell, x, y) => {
   }
 };
 
-const useCanvas = (currBuffer, cellQuantity) => {
+const useCellCanvas = (currBuffer, cellSize) => {
   const canvasRef = useRef(null);
-  const containerRef = useRef(null);
-
-  const [cellSize, setCellSize] = useState(0);
-
-  useLayoutEffect(() => {
-    const { height, width } = containerRef.current.getBoundingClientRect();
-    canvasRef.current.height = height;
-    canvasRef.current.width = width;
-    setCellSize(width / cellQuantity);
-  }, [cellQuantity]);
 
   useEffect(() => {
     drawState(currBuffer, canvasRef.current, cellSize);
@@ -53,10 +43,9 @@ const useCanvas = (currBuffer, cellQuantity) => {
 
   return [
     canvasRef,
-    containerRef,
     mapPixelToCell,
     (cell, x, y) => toggleRect(canvasRef.current, cellSize, cell, x, y)
   ];
 };
 
-export default useCanvas;
+export default useCellCanvas;
