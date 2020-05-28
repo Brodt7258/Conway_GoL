@@ -4,6 +4,10 @@ const matrixOfSize = (size) => {
   return [...Array(size)].map(() => Array(size).fill(false));
 };
 
+const genRandomMatrix = (size, setGrid) => {
+  setGrid(matrixOfSize(size).map((row) => row.map(() => Math.random() < 0.2)));
+};
+
 const computeNextState = (prev, next) => {
   next.forEach((row, i) => {
     row.forEach((_, j) => {
@@ -43,7 +47,8 @@ const useBufferGrid = (size) => {
 
   return {
     grid,
-    computeNext: (prev) => computeNextState(prev, grid)
+    computeNext: (prev) => computeNextState(prev, grid),
+    genRandomMatrix: () => genRandomMatrix(size, setGrid)
   };
 };
 

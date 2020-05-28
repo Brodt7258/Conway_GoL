@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import useDoubleBuffer from './useDoubleBuffer';
 import useCanvas from './useCanvas';
@@ -8,12 +8,11 @@ const GameCanvas = () => {
   const [cellQuantity] = useState(20);
   const [running, setRunning] = useState(null);
 
-  const { currBuffer, updateNextBuffer } = useDoubleBuffer(generation, cellQuantity);
-  const [canvasRef, containerRef, drawState, mapPixelToCell] = useCanvas(cellQuantity);
+  // const [seed, setSeed] = useState('');
+  // const [density, setDensity] = useState(0.2);
 
-  useEffect(() => {
-    drawState(currBuffer.grid);
-  }, [drawState, currBuffer]);
+  const { currBuffer, mutateCurrent, updateNextBuffer, genRandomMatrix } = useDoubleBuffer(generation, cellQuantity);
+  const [canvasRef, containerRef, mapPixelToCell, toggleRect] = useCanvas(currBuffer, cellQuantity);
 
   const incrementGen = () => {
     setGeneration((prev) => prev + 1);
@@ -21,19 +20,30 @@ const GameCanvas = () => {
 
   const handleCanvasClick = (e) => {
     const [row, col] = mapPixelToCell(e.clientX, e.clientY);
-    currBuffer.grid[row][col] = !currBuffer.grid[row][col];
-    drawState(currBuffer.grid);
+    const cell = currBuffer[row][col];
+    mutateCurrent(row, col);
+    toggleRect(cell, col, row);
     updateNextBuffer();
+  };
+
+  const stopRunning = () => {
+    clearInterval(running);
+    setRunning(null);
   };
 
   const toggleRunning = () => {
     if (running) {
-      clearInterval(running);
-      setRunning(null);
+      stopRunning();
     } else {
-      const runInterval = setInterval(incrementGen, 500);
+      const runInterval = setInterval(incrementGen, 50);
       setRunning(runInterval);
     }
+  };
+
+  const randomize = () => {
+    stopRunning();
+    setGeneration(0);
+    genRandomMatrix();
   };
 
   return (
@@ -43,8 +53,25 @@ const GameCanvas = () => {
       </div>
       <div className="controls">
         <p>{generation}</p>
-        <button type="button" onClick={incrementGen}>step</button>
-        <button type="button" onClick={toggleRunning}>{running ? 'pause' : 'play'}</button>
+        <button
+          type="button"
+          onClick={randomize}
+        >
+          randomize
+        </button>
+        <button
+          type="button"
+          onClick={incrementGen}
+          disabled={running}
+        >
+          step
+        </button>
+        <button
+          type="button"
+          onClick={toggleRunning}
+        >
+          {running ? 'pause' : 'play'}
+        </button>
       </div>
     </>
   );

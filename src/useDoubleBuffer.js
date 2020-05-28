@@ -19,13 +19,23 @@ const useDoubleBuffer = (generation, cellQuantity) => {
 
   const buffers = {
     get currBuffer() {
-      return current();
+      return current().grid;
     },
     get nextBuffer() {
-      return next();
+      return next().grid;
     },
     updateNextBuffer() {
       next().computeNext(current().grid);
+    },
+    mutateCurrent(row, col) {
+      if (current().grid[row][col] === false) {
+        current().grid[row][col] = true;
+      } else {
+        current().grid[row][col] = false;
+      }
+    },
+    genRandomMatrix() {
+      bufferA.genRandomMatrix();
     }
   };
 
