@@ -12,8 +12,8 @@ const genRandomMatrix = (size, setGrid, { seed, density }) => {
   setGrid(matrixOfSize(size).map((row) => row.map(() => (random() < Number(density) ? newCell() : null))));
 };
 
-const newCell = () => {
-  return { age: 0 };
+const newCell = (config = { age: 0, neighbors: [] }) => {
+  return { age: config.age, neighbors: config.neighbors };
 };
 
 // build the state for this buffer based on the previous state
@@ -21,13 +21,13 @@ const newCell = () => {
 const computeNextState = (prev, next) => {
   next.forEach((row, i) => {
     row.forEach((_, j) => {
-      const neighbors = totalNeighbors(j, i, prev);
+      const [neighbors, ages] = totalNeighbors(j, i, prev);
       if (prev[i][j] && (neighbors < 2 || neighbors > 3)) {
         next[i][j] = null;
       } else if (!prev[i][j] && neighbors === 3) {
-        next[i][j] = newCell();
+        next[i][j] = newCell({ age: 0, neighbors: ages });
       } else {
-        next[i][j] = prev[i][j] ? { ...prev[i][j], age: prev[i][j].age + 1 } : null;
+        next[i][j] = prev[i][j] ? { ...prev[i][j], age: prev[i][j].age + 1, neighbors: ages } : null;
       }
     });
   });
@@ -36,8 +36,13 @@ const computeNextState = (prev, next) => {
 const totalNeighbors = (x, y, prev) => {
   const neighborOffsets = [[-1, -1], [-1, 0], [-1, 1], [0, -1], [0, 1], [1, -1], [1, 0], [1, 1]];
   const total = neighborOffsets.reduce((acc, offset) => {
-    return acc + (getOffsetNeighbor(offset, x, y, prev) ? 1 : 0);
-  }, 0);
+    const neighbor = getOffsetNeighbor(offset, x, y, prev);
+    acc[0] += (neighbor ? 1 : 0);
+    if (neighbor) {
+      acc[1].push(neighbor.age);
+    }
+    return acc;
+  }, [0, []]);
   return total;
 };
 
@@ -60,11 +65,20 @@ const useBufferGrid = (size) => {
     setGrid(matrixOfSize(size));
   };
 
+  const mutateAt = (row, col) => {
+    if (grid[row][col]) {
+      grid[row][col] = null;
+    } else {
+      grid[row][col] = newCell();
+    }
+  };
+
   return {
     grid,
     computeNext: (prev) => computeNextState(prev, grid),
     genRandomMatrix: (randomConfig) => genRandomMatrix(size, setGrid, randomConfig),
-    clearMatrix
+    clearMatrix,
+    mutateAt
   };
 };
 

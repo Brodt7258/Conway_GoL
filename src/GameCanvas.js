@@ -17,14 +17,14 @@ const GameCanvas = () => {
 
   const containerRef = useRef(null);
 
-  // setup the logic for my canvases
+  // setup the logic for my buffers and canvases
   const {
     currBuffer,
     mutateCurrent,
     updateNextBuffer,
     genRandomMatrix,
     clearMatrix
-  } = useDoubleBuffer(generation, cellQuantity, { seed, density });
+  } = useDoubleBuffer(generation, cellQuantity);
   const [cellCanvasRef, mapPixelToCell, toggleRect] = useCellCanvas(currBuffer, cellSize);
   const [gridCanvasRef] = useGridCanvas(cellSize);
 
@@ -72,7 +72,7 @@ const GameCanvas = () => {
   const randomize = () => {
     stopRunning();
     setGeneration(0);
-    genRandomMatrix();
+    genRandomMatrix(seed, density);
   };
 
   const clear = () => {
