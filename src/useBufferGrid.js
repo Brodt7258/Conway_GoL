@@ -2,12 +2,16 @@ import { useState, useEffect } from 'react';
 import SeedRandom from 'seedrandom';
 
 const matrixOfSize = (size) => {
-  return [...Array(size)].map(() => Array(size).fill(false));
+  return [...Array(size)].map(() => Array(size).fill(null));
 };
 
 const genRandomMatrix = (size, setGrid, { seed, density }) => {
   const random = seed.length ? new SeedRandom(seed) : new SeedRandom();
-  setGrid(matrixOfSize(size).map((row) => row.map(() => random() < Number(density))));
+  setGrid(matrixOfSize(size).map((row) => row.map(() => (random() < Number(density) ? newCell() : null))));
+};
+
+const newCell = () => {
+  return { age: 0 };
 };
 
 const computeNextState = (prev, next) => {
@@ -15,11 +19,11 @@ const computeNextState = (prev, next) => {
     row.forEach((_, j) => {
       const neighbors = totalNeighbors(j, i, prev);
       if (prev[i][j] && (neighbors < 2 || neighbors > 3)) {
-        next[i][j] = false;
+        next[i][j] = null;
       } else if (!prev[i][j] && neighbors === 3) {
-        next[i][j] = true;
+        next[i][j] = newCell();
       } else {
-        next[i][j] = prev[i][j];
+        next[i][j] = prev[i][j] ? { ...prev[i][j], age: prev[i][j].age + 1 } : null;
       }
     });
   });
