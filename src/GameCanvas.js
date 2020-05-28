@@ -44,7 +44,7 @@ const GameCanvas = () => {
     glowRef.current.width = width;
 
     setCellSize(width / cellQuantity);
-  }, [cellQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef]);
+  }, [cellQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef, glowRef]);
 
   // All the updates are triggered by this function
   const incrementGen = () => {
