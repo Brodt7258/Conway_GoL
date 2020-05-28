@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
+import SeedRandom from 'seedrandom';
 
 const matrixOfSize = (size) => {
   return [...Array(size)].map(() => Array(size).fill(false));
 };
 
-const genRandomMatrix = (size, setGrid) => {
-  setGrid(matrixOfSize(size).map((row) => row.map(() => Math.random() < 0.2)));
+const genRandomMatrix = (size, setGrid, { seed, density }) => {
+  const random = seed.length ? new SeedRandom(seed) : new SeedRandom();
+  setGrid(matrixOfSize(size).map((row) => row.map(() => random() < Number(density))));
 };
 
 const computeNextState = (prev, next) => {
@@ -45,10 +47,15 @@ const useBufferGrid = (size) => {
     setGrid(matrixOfSize(size));
   }, [size]);
 
+  const clearMatrix = () => {
+    setGrid(matrixOfSize(size));
+  };
+
   return {
     grid,
     computeNext: (prev) => computeNextState(prev, grid),
-    genRandomMatrix: () => genRandomMatrix(size, setGrid)
+    genRandomMatrix: (randomConfig) => genRandomMatrix(size, setGrid, randomConfig),
+    clearMatrix
   };
 };
 

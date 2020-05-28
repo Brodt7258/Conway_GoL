@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import useBufferGrid from './useBufferGrid';
 
-const useDoubleBuffer = (generation, cellQuantity) => {
+const useDoubleBuffer = (generation, cellQuantity, randomConfig) => {
   const bufferA = useBufferGrid(cellQuantity);
   const bufferB = useBufferGrid(cellQuantity);
 
@@ -35,7 +35,10 @@ const useDoubleBuffer = (generation, cellQuantity) => {
       }
     },
     genRandomMatrix() {
-      bufferA.genRandomMatrix();
+      bufferA.genRandomMatrix(randomConfig);
+    },
+    clearMatrix() {
+      bufferA.clearMatrix();
     }
   };
 

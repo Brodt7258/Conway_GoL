@@ -5,13 +5,19 @@ import useCanvas from './useCanvas';
 
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
-  const [cellQuantity] = useState(20);
+  const [cellQuantity] = useState(50);
   const [running, setRunning] = useState(null);
 
-  // const [seed, setSeed] = useState('');
-  // const [density, setDensity] = useState(0.2);
+  const [seed, setSeed] = useState('');
+  const [density, setDensity] = useState(0.2);
 
-  const { currBuffer, mutateCurrent, updateNextBuffer, genRandomMatrix } = useDoubleBuffer(generation, cellQuantity);
+  const {
+    currBuffer,
+    mutateCurrent,
+    updateNextBuffer,
+    genRandomMatrix,
+    clearMatrix
+  } = useDoubleBuffer(generation, cellQuantity, { seed, density });
   const [canvasRef, containerRef, mapPixelToCell, toggleRect] = useCanvas(currBuffer, cellQuantity);
 
   const incrementGen = () => {
@@ -46,6 +52,12 @@ const GameCanvas = () => {
     genRandomMatrix();
   };
 
+  const clear = () => {
+    stopRunning();
+    setGeneration(0);
+    clearMatrix();
+  };
+
   return (
     <>
       <div ref={containerRef} className="canvas-container">
@@ -53,6 +65,12 @@ const GameCanvas = () => {
       </div>
       <div className="controls">
         <p>{generation}</p>
+        <button
+          type="button"
+          onClick={clear}
+        >
+          clear
+        </button>
         <button
           type="button"
           onClick={randomize}
@@ -72,6 +90,20 @@ const GameCanvas = () => {
         >
           {running ? 'pause' : 'play'}
         </button>
+      </div>
+      <div>
+        <div>
+          <label htmlFor="density">
+            Density:
+            <input name="density" type="text" onChange={(e) => setDensity(e.target.value)} value={density} />
+          </label>
+        </div>
+        <div>
+          <label htmlFor="seed">
+            Seed:
+            <input name="seed" type="text" onChange={(e) => setSeed(e.target.value)} value={seed} />
+          </label>
+        </div>
       </div>
     </>
   );
