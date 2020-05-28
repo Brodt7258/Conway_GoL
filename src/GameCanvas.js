@@ -17,6 +17,7 @@ const GameCanvas = () => {
 
   const containerRef = useRef(null);
 
+  // setup the logic for my canvases
   const {
     currBuffer,
     mutateCurrent,
@@ -27,6 +28,7 @@ const GameCanvas = () => {
   const [cellCanvasRef, mapPixelToCell, toggleRect] = useCellCanvas(currBuffer, cellSize);
   const [gridCanvasRef] = useGridCanvas(cellSize);
 
+  // size the canvases to fit the container div
   useLayoutEffect(() => {
     const { height, width } = containerRef.current.getBoundingClientRect();
 
@@ -39,6 +41,7 @@ const GameCanvas = () => {
     setCellSize(width / cellQuantity);
   }, [cellQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef]);
 
+  // All the updates are triggered by this function
   const incrementGen = () => {
     setGeneration((prev) => prev + 1);
   };
@@ -56,6 +59,7 @@ const GameCanvas = () => {
     setRunning(null);
   };
 
+  // setup an interval for game updates
   const toggleRunning = () => {
     if (running) {
       stopRunning();

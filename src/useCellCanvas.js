@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 
+// iterate over the whole buffer and draw all live cells
 const drawState = (gameBuffer, canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
 
@@ -14,6 +15,7 @@ const drawState = (gameBuffer, canvas, cellSize) => {
   });
 };
 
+// draw/clear 1 cell (such as for clicks)
 const toggleRect = (canvas, cellSize, cell, x, y) => {
   const ctx = canvas.getContext('2d');
   console.log('cell', cell);
@@ -28,10 +30,12 @@ const toggleRect = (canvas, cellSize, cell, x, y) => {
 const useCellCanvas = (currBuffer, cellSize) => {
   const canvasRef = useRef(null);
 
+  // any time the buffer is switched, automatically redraw the canvas with new state
   useEffect(() => {
     drawState(currBuffer, canvasRef.current, cellSize);
   }, [currBuffer, cellSize]);
 
+  // helper, determines which cell a set of coords is located in (used for clicks)
   const mapPixelToCell = (x, y) => {
     const { top, left } = canvasRef.current.getBoundingClientRect();
 

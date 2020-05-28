@@ -7,6 +7,7 @@ const drawGrid = (grid, cellSize) => {
   ctx.lineWidth = Math.min(cellSize / 10, 0.5);
   ctx.strokeStyle = 'black';
 
+  // draw vertical lines, spaced by the cellSize
   ctx.beginPath();
   let currentX = cellSize;
   ctx.moveTo(0, 0);
@@ -19,6 +20,7 @@ const drawGrid = (grid, cellSize) => {
   }
   ctx.stroke();
 
+  // draw horizontal lines, spaced by the cellSize
   ctx.beginPath();
   let currentY = cellSize;
   ctx.moveTo(0, 0);
@@ -35,6 +37,7 @@ const drawGrid = (grid, cellSize) => {
 const useGridCanvas = (cellSize) => {
   const gridCanvasRef = useRef(null);
 
+  // redraw the grid any time the cellSize argument changes
   useEffect(() => {
     drawGrid(gridCanvasRef.current, cellSize);
   }, [cellSize]);

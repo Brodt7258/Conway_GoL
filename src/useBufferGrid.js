@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import SeedRandom from 'seedrandom';
 
+// generate 2d array
 const matrixOfSize = (size) => {
   return [...Array(size)].map(() => Array(size).fill(null));
 };
 
+// populate 2d array with cells/null based on random algorithm
 const genRandomMatrix = (size, setGrid, { seed, density }) => {
   const random = seed.length ? new SeedRandom(seed) : new SeedRandom();
   setGrid(matrixOfSize(size).map((row) => row.map(() => (random() < Number(density) ? newCell() : null))));
@@ -14,6 +16,8 @@ const newCell = () => {
   return { age: 0 };
 };
 
+// build the state for this buffer based on the previous state
+// all the game rules happen here
 const computeNextState = (prev, next) => {
   next.forEach((row, i) => {
     row.forEach((_, j) => {
@@ -47,6 +51,7 @@ const getOffsetNeighbor = (offset, x, y, prev) => {
 const useBufferGrid = (size) => {
   const [grid, setGrid] = useState(matrixOfSize(size));
 
+  // any time the size of the matrix changes, declare a new matrix of the correct size
   useEffect(() => {
     setGrid(matrixOfSize(size));
   }, [size]);
