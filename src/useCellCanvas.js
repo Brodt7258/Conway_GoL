@@ -1,12 +1,11 @@
 import { useRef, useEffect } from 'react';
-import colorInterpolate from 'color-interpolate';
+import { averageAges, colorByAge } from './colorUtil';
 
 // iterate over the whole buffer and draw all live cells
 const drawState = (gameBuffer, canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  // ctx.fillStyle = 'orange';
   gameBuffer.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
@@ -27,20 +26,6 @@ const toggleRect = (canvas, cellSize, cell, x, y) => {
   } else {
     ctx.clearRect(x * cellSize, y * cellSize, cellSize, cellSize);
   }
-};
-
-// use neighboring cell ages for calculating cell color (but emphasize this cell's age)
-const averageAges = (age, neighbors) => {
-  const avg = neighbors.reduce((acc, e) => acc + e, age * 2) / (neighbors.length + 2);
-  return avg;
-};
-
-// map an age integer to a color between two (or more) values. Like a gradient.
-const colorByAge = (age) => {
-  const brightMap = colorInterpolate(['#FFC719', '#BF033B']);
-  const darkMap = colorInterpolate(['#BF033B', '#4c0117']);
-
-  return age <= 100 ? brightMap(age / 100) : darkMap(Math.min((age - 100) / 100, 1));
 };
 
 const useCellCanvas = (currBuffer, cellSize) => {

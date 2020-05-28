@@ -3,6 +3,7 @@ import React, { useState, useRef, useLayoutEffect } from 'react';
 import useDoubleBuffer from './useDoubleBuffer';
 import useCellCanvas from './useCellCanvas';
 import useGridCanvas from './useGridCanvas';
+import useBGGlowCanvas from './useBGGlowCanvas';
 
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
@@ -27,6 +28,7 @@ const GameCanvas = () => {
   } = useDoubleBuffer(generation, cellQuantity);
   const [cellCanvasRef, mapPixelToCell, toggleRect] = useCellCanvas(currBuffer, cellSize);
   const [gridCanvasRef] = useGridCanvas(cellSize);
+  const [glowRef] = useBGGlowCanvas(currBuffer, cellSize);
 
   // size the canvases to fit the container div
   useLayoutEffect(() => {
@@ -37,6 +39,9 @@ const GameCanvas = () => {
 
     gridCanvasRef.current.height = height;
     gridCanvasRef.current.width = width;
+
+    glowRef.current.height = height;
+    glowRef.current.width = width;
 
     setCellSize(width / cellQuantity);
   }, [cellQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef]);
@@ -84,6 +89,7 @@ const GameCanvas = () => {
   return (
     <>
       <div ref={containerRef} className="canvas-container">
+        <canvas ref={glowRef} className="canvas" />
         <canvas ref={cellCanvasRef} onClick={handleCanvasClick} className="canvas" />
         <canvas ref={gridCanvasRef} onClick={handleCanvasClick} className="canvas" />
       </div>
