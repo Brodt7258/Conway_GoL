@@ -17,3 +17,15 @@ export const colorByAge = (age) => {
 export const setAlpha = (color, alpha) => {
   return [color.slice(0, 3), 'a', color.slice(3, -1), `, ${alpha}`, color.slice(-1)].join('');
 };
+
+export const colorByLiveCount = (liveCount) => {
+  const bgMap = colorInterpolate(['#030c21', '#1c0f3e']);
+  const scaleCount = Math.min(liveCount / 500, 1.0);
+  return bgMap(scaleCount);
+};
+
+export const glowByLiveCount = (liveCount) => {
+  const glowMap = colorInterpolate(['#BF033B', '#FFC719']);
+  const scaleCount = Math.min(liveCount / 400, 1.0);
+  return glowMap(scaleCount);
+};

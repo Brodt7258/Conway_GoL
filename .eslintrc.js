@@ -3,7 +3,7 @@ module.exports = {
         "browser": true,
         "es6": true
     },
-    "extends": "airbnb",
+    "extends": ["airbnb"],
     "globals": {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
@@ -16,7 +16,8 @@ module.exports = {
         "sourceType": "module"
     },
     "plugins": [
-        "react"
+        "react",
+        "react-hooks"
     ],
     "rules": {
         "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
@@ -28,7 +29,6 @@ module.exports = {
         "import/prefer-default-export": "off",
         "react/jsx-props-no-spreading": "off",
         "object-curly-newline": "off",
-        "no-param-reassign": "off",
-        "react-hooks/exhaustive-deps": "off"
+        "no-param-reassign": "off"
     }
 };

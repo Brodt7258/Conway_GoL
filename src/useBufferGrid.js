@@ -2,14 +2,23 @@ import { useState, useEffect } from 'react';
 import SeedRandom from 'seedrandom';
 
 // generate 2d array
-const matrixOfSize = (size) => {
-  return [...Array(size)].map(() => Array(size).fill(null));
+const matrixOfSize = (xQuantity, yQuantity) => {
+  return [...Array(yQuantity)].map(() => Array(xQuantity).fill(null));
 };
 
 // populate 2d array with cells/null based on random algorithm
-const genRandomMatrix = (size, setGrid, { seed, density }) => {
+const genRandomMatrix = (xQuantity, yQuantity, setGrid, { seed, density }, setLiveCount) => {
   const random = seed.length ? new SeedRandom(seed) : new SeedRandom();
-  setGrid(matrixOfSize(size).map((row) => row.map(() => (random() < Number(density) ? newCell() : null))));
+  let count = 0;
+  setGrid(matrixOfSize(xQuantity, yQuantity).map((row) => row.map(() => {
+    const isLive = random() < Number(density);
+    if (isLive) {
+      count += 1;
+      return newCell();
+    }
+    return null;
+  })));
+  setLiveCount(count);
 };
 
 const newCell = (config = { age: 0, neighbors: [] }) => {
@@ -18,19 +27,25 @@ const newCell = (config = { age: 0, neighbors: [] }) => {
 
 // build the state for this buffer based on the previous state
 // all the game rules happen here
-const computeNextState = (prev, next) => {
+const computeNextState = (prev, next, setLiveCount) => {
+  let count = 0;
   next.forEach((row, i) => {
     row.forEach((_, j) => {
       const [neighbors, ages] = totalNeighbors(j, i, prev);
       if (prev[i][j] && (neighbors < 2 || neighbors > 3)) {
         next[i][j] = null;
       } else if (!prev[i][j] && neighbors === 3) {
+        count += 1;
         next[i][j] = newCell({ age: 0, neighbors: ages });
+      } else if (prev[i][j]) {
+        count += 1;
+        next[i][j] = { ...prev[i][j], age: prev[i][j].age + 1, neighbors: ages };
       } else {
-        next[i][j] = prev[i][j] ? { ...prev[i][j], age: prev[i][j].age + 1, neighbors: ages } : null;
+        next[i][j] = null;
       }
     });
   });
+  setLiveCount(count);
 };
 
 const totalNeighbors = (x, y, prev) => {
@@ -53,16 +68,16 @@ const getOffsetNeighbor = (offset, x, y, prev) => {
   return prev[yPos][xPos];
 };
 
-const useBufferGrid = (size) => {
-  const [grid, setGrid] = useState(matrixOfSize(size));
+const useBufferGrid = (xQuantity, yQuantity, setLiveCount) => {
+  const [grid, setGrid] = useState(matrixOfSize(xQuantity, yQuantity));
 
   // any time the size of the matrix changes, declare a new matrix of the correct size
   useEffect(() => {
-    setGrid(matrixOfSize(size));
-  }, [size]);
+    setGrid(matrixOfSize(xQuantity, yQuantity));
+  }, [xQuantity, yQuantity]);
 
   const clearMatrix = () => {
-    setGrid(matrixOfSize(size));
+    setGrid(matrixOfSize(xQuantity, yQuantity));
   };
 
   const mutateAt = (row, col) => {
@@ -75,8 +90,8 @@ const useBufferGrid = (size) => {
 
   return {
     grid,
-    computeNext: (prev) => computeNextState(prev, grid),
-    genRandomMatrix: (randomConfig) => genRandomMatrix(size, setGrid, randomConfig),
+    computeNext: (prev) => computeNextState(prev, grid, setLiveCount),
+    genRandomMatrix: (randomConfig) => genRandomMatrix(xQuantity, yQuantity, setGrid, randomConfig, setLiveCount),
     clearMatrix,
     mutateAt
   };

@@ -4,8 +4,10 @@ const drawGrid = (grid, cellSize) => {
   const ctx = grid.getContext('2d');
   ctx.clearRect(0, 0, grid.width, grid.height);
 
-  ctx.lineWidth = Math.min(cellSize / 10, 0.5);
   ctx.strokeStyle = 'black';
+  ctx.lineWidth = Math.min(cellSize / 4, 2);
+  ctx.strokeRect(0, 0, grid.width, grid.height);
+  ctx.lineWidth = Math.min(cellSize / 10, 0.5);
 
   // draw vertical lines, spaced by the cellSize
   ctx.beginPath();

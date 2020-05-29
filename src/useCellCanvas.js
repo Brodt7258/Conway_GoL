@@ -19,7 +19,6 @@ const drawState = (gameBuffer, canvas, cellSize) => {
 // draw/clear 1 cell (such as for clicks)
 const toggleRect = (canvas, cellSize, cell, x, y) => {
   const ctx = canvas.getContext('2d');
-  console.log('cell', cell);
   if (!cell) {
     ctx.fillStyle = '#FFC719';
     ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);

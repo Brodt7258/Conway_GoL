@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from 'react';
 import useBufferGrid from './useBufferGrid';
 
-const useDoubleBuffer = (generation, cellQuantity) => {
-  const bufferA = useBufferGrid(cellQuantity);
-  const bufferB = useBufferGrid(cellQuantity);
+const useDoubleBuffer = (generation, xQuantity, yQuantity, setLiveCount) => {
+  const bufferA = useBufferGrid(xQuantity, yQuantity, setLiveCount);
+  const bufferB = useBufferGrid(xQuantity, yQuantity, setLiveCount);
 
   // the generation argument is used to determine which buffer is being used
   const current = useCallback(() => {
