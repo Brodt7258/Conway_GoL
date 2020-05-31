@@ -50,7 +50,7 @@ const GameCanvas = () => {
 
     setCellSize(derivedCellSize);
     setYQuantity(derivedYQuantity);
-  }, [xQuantity, containerRef, setCellSize, cellCanvasRef, gridCanvasRef, glowRef]);
+  }, [xQuantity, containerRef, cellCanvasRef, gridCanvasRef, glowRef]);
 
   const [gradient, setGradient] = useState('');
   // build a gradient based on liveCount, and positioned behind the canvas container
