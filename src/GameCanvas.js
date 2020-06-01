@@ -1,66 +1,46 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import clamp from 'clamp';
 
-// import useDoubleBuffer from './useDoubleBuffer';
 import useCellCanvas from './useCellCanvas';
-// import useGridCanvas from './useGridCanvas';
-// import useBGGlowCanvas from './useBGGlowCanvas';
-import { glowByLiveCount, setAlpha } from './colorUtil';
-import { initBuffers, advanceGameState, getCurrentBuffer, initRandom } from './state/buffers';
+import { genBGDivGradient } from './util/colorUtil';
+import useInterval from './util/useInterval';
+import deriveDimensions from './util/deriveDimensions';
+import {
+  initBuffers,
+  advanceGameState,
+  getCurrentBuffer,
+  initRandom,
+  mutateAt
+} from './state/buffers';
 
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
-
-  const [xQuantity] = useState(50);
-  const [yQuantity, setYQuantity] = useState(0);
-  const [cellSize, setCellSize] = useState(10);
-  const [liveCount] = useState(0);
-
-  const [running, setRunning] = useState(null);
-  const [intervalTime, setIntervalTime] = useState(300);
-
-  const [seed, setSeed] = useState('');
-  const [density, setDensity] = useState(0.2);
+  const [liveCount, setLiveCount] = useState(0);
 
   const containerRef = useRef(null);
-  const currBuffer = useRef([]);
 
-  const [cellCanvasRef, , , reDraw] = useCellCanvas(cellSize);
+  const [{ xQuantity, yQuantity, cellSize, derivedHeight }, setLayout] = useState({ xQuantity: 50 });
+  const [cellCanvasRef, mapPixelToCell, reDraw] = useCellCanvas(cellSize);
+  useLayoutEffect(() => {
+    const { height, width } = containerRef.current.getBoundingClientRect();
+    cellCanvasRef.current.width = width;
+    const [derivedCellSize, derivedYQuantity, canvasHeight] = deriveDimensions(xQuantity, height, width);
+    setLayout((prev) => ({ ...prev, yQuantity: derivedYQuantity, cellSize: derivedCellSize, derivedHeight: canvasHeight }));
+  }, [xQuantity, containerRef, cellCanvasRef]);
 
   useEffect(() => {
     initBuffers(yQuantity, xQuantity);
   }, [xQuantity, yQuantity]);
 
   useEffect(() => {
-    advanceGameState();
+    const count = advanceGameState();
+    setLiveCount(count);
     reDraw(getCurrentBuffer());
   }, [generation, reDraw]);
 
-  // size the canvases to fit the container div
-  const [derivedHeight, setDerivedHeight] = useState(0);
-  useLayoutEffect(() => {
-    const { height, width } = containerRef.current.getBoundingClientRect();
-
-    cellCanvasRef.current.width = width;
-
-    const derivedCellSize = width / xQuantity;
-    const derivedYQuantity = Math.floor(height / derivedCellSize);
-    setDerivedHeight(derivedCellSize * derivedYQuantity);
-
-    setCellSize(derivedCellSize);
-    setYQuantity(derivedYQuantity);
-  }, [xQuantity, containerRef, cellCanvasRef]);
-
   const [gradient, setGradient] = useState('');
-  // build a gradient based on liveCount, and positioned behind the canvas container
   useLayoutEffect(() => {
-    const { height: containerHeight, width: containerWidth, left, top } = containerRef.current.getBoundingClientRect();
-
-    setGradient(`radial-gradient(
-    circle at ${left + (containerWidth / 2)}px ${top + (containerHeight / 2)}px,
-    ${setAlpha(glowByLiveCount(liveCount),
-    clamp(liveCount / 400, 0.2, 0.5))} 0%,
-    transparent ${clamp((liveCount / 5), 0, 75)}%)`);
+    setGradient(genBGDivGradient(containerRef, liveCount));
   }, [liveCount]);
 
   // All the updates are triggered by this function
@@ -68,35 +48,36 @@ const GameCanvas = () => {
     setGeneration((prev) => prev + 1);
   };
 
+  const [selectedDelay, setSelectedDelay] = useState(150);
+  const [runningDelay, setRunningDelay] = useState(null);
+  useInterval(incrementGen, runningDelay);
+
   const handleCanvasClick = (e) => {
-    // const [row, col] = mapPixelToCell(e.clientX, e.clientY);
-    // const cell = currBuffer[row][col];
-    // mutateCurrent(row, col);
-    // toggleRect(cell, col, row);
-    // updateNextBuffer();
+    const [row, col] = mapPixelToCell(e.clientX, e.clientY);
+    mutateAt(row, col);
+    reDraw(getCurrentBuffer());
   };
 
   const stopRunning = () => {
-    clearInterval(running);
-    setRunning(null);
+    setRunningDelay(null);
   };
 
   // setup an interval for game updates
   const toggleRunning = () => {
-    if (running) {
+    if (runningDelay) {
       stopRunning();
     } else {
-      const runInterval = setInterval(incrementGen, intervalTime);
-      setRunning(runInterval);
+      setRunningDelay(selectedDelay);
     }
   };
 
+  const [seed, setSeed] = useState('');
+  const [density, setDensity] = useState(0.2);
   const randomize = () => {
     stopRunning();
     setGeneration(0);
-    // genRandomMatrix(seed, density);
-    initRandom(yQuantity, xQuantity, density, seed);
-    currBuffer.current = getCurrentBuffer();
+    const count = initRandom(yQuantity, xQuantity, density, seed);
+    setLiveCount(count);
     reDraw(getCurrentBuffer());
   };
 
@@ -107,44 +88,25 @@ const GameCanvas = () => {
     reDraw(getCurrentBuffer());
   };
 
-  useEffect(() => {
-    if (running) {
-      stopRunning();
-      incrementGen();
-      const runInterval = setInterval(incrementGen, intervalTime);
-      setRunning(runInterval);
+  const changeSpeed = (faster) => {
+    const newDelay = clamp(selectedDelay + (faster ? -50 : 50), 50, 2000);
+    setSelectedDelay(newDelay);
+    if (runningDelay) {
+      setRunningDelay(newDelay);
     }
-  }, [intervalTime]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const changeInterval = (increaseSpeed) => {
-    if (increaseSpeed) {
-      setIntervalTime((prev) => clamp(prev - 50, 50, 2000));
-    } else {
-      setIntervalTime((prev) => clamp(prev + 50, 50, 2000));
-    }
-  };
-
-  const speedUp = () => {
-    changeInterval(true);
-  };
-
-  const slowDown = () => {
-    changeInterval(false);
   };
 
   return (
     <div className="root-container" style={{ backgroundColor: '#030c21', backgroundImage: gradient }}>
       <div ref={containerRef} className="canvas-container">
-        {/* <canvas ref={glowRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-2" /> */}
         <canvas
           ref={cellCanvasRef}
           height={derivedHeight}
           onClick={handleCanvasClick}
-          className="canvas index-3"
+          className="canvas"
         />
-        {/* <canvas ref={gridCanvasRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-4" /> */}
       </div>
-      <div className="controls index-2">
+      <div className="controls">
         <p>{generation}</p>
         <button
           type="button"
@@ -161,7 +123,7 @@ const GameCanvas = () => {
         <button
           type="button"
           onClick={incrementGen}
-          disabled={running}
+          disabled={runningDelay}
         >
           step
         </button>
@@ -169,18 +131,18 @@ const GameCanvas = () => {
           type="button"
           onClick={toggleRunning}
         >
-          {running ? 'pause' : 'play'}
+          {runningDelay ? 'pause' : 'play'}
         </button>
         <button
           type="button"
-          onClick={slowDown}
+          onClick={() => changeSpeed(false)}
         >
           -
         </button>
-        <span>{intervalTime}</span>
+        <span>{selectedDelay}</span>
         <button
           type="button"
-          onClick={speedUp}
+          onClick={() => changeSpeed(true)}
         >
           +
         </button>

@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react';
-import { averageAges, colorByAge } from './colorUtil';
+import { averageAges, colorByAge } from './util/colorUtil';
 
 // iterate over the whole buffer and draw all live cells
 const drawState = (gameBuffer, canvas, cellSize) => {
@@ -14,17 +14,6 @@ const drawState = (gameBuffer, canvas, cellSize) => {
       }
     });
   });
-};
-
-// draw/clear 1 cell (such as for clicks)
-const toggleRect = (canvas, cellSize, cell, x, y) => {
-  const ctx = canvas.getContext('2d');
-  if (!cell) {
-    ctx.fillStyle = '#FFC719';
-    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
-  } else {
-    ctx.clearRect(x * cellSize, y * cellSize, cellSize, cellSize);
-  }
 };
 
 const useCellCanvas = (cellSize) => {
@@ -47,7 +36,6 @@ const useCellCanvas = (cellSize) => {
   return [
     canvasRef,
     mapPixelToCell,
-    (cell, x, y) => toggleRect(canvasRef.current, cellSize, cell, x, y),
     reDraw
   ];
 };

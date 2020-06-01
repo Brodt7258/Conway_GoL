@@ -1,7 +1,7 @@
 import { useRef, useEffect } from 'react';
 import clamp from 'clamp';
 
-import { averageAges, colorByAge, setAlpha } from './colorUtil';
+import { averageAges, colorByAge, setAlpha } from './util/colorUtil';
 
 const getRadius = (age, cellSize) => {
   const rad = (cellSize * 6) / (Math.log(Math.max(age, 1)) * 0.3);

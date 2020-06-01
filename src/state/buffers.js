@@ -68,7 +68,7 @@ export const computeNextState = (prev, next) => {
     });
   });
   flip = !flip;
-  return [next, count];
+  return count;
 };
 
 const totalNeighbors = (x, y, prev) => {
