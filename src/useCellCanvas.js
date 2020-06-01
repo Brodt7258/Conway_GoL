@@ -3,14 +3,18 @@ import clamp from 'clamp';
 
 import { averageAges, colorByAge, setAlpha } from './util/colorUtil';
 
+const drawCell = (ctx, x, y, cellSize, cell) => {
+  ctx.fillStyle = colorByAge(averageAges(cell.age, cell.neighbors));
+  ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+};
+
 // iterate over the whole buffer and draw all live cells
 const drawCells = (gameBuffer, canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
   gameBuffer.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
-        ctx.fillStyle = colorByAge(averageAges(cell.age, cell.neighbors));
-        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+        drawCell(ctx, x, y, cellSize, cell);
       }
     });
   });
@@ -22,8 +26,35 @@ const getRadius = (age, cellSize) => {
 };
 
 const alphaByAge = (age) => {
-  const alpha = Math.log(Math.min(age, 1));
-  return clamp(alpha, 0.2, 1);
+  const alpha = 1 / (Math.log(Math.max(age, 1)) * 0.15);
+  return clamp(alpha, 0.2, 0.35);
+};
+
+const drawGlowCircle = (ctx, x, y, cellSize, cell) => {
+  const avgAges = averageAges(cell.age, cell.neighbors);
+  const radius = getRadius(avgAges, cellSize);
+  const glow = ctx.createRadialGradient(
+    (x * cellSize) + (cellSize / 2),
+    (y * cellSize) + (cellSize / 2),
+    0,
+    (x * cellSize) + (cellSize / 2),
+    (y * cellSize) + (cellSize / 2),
+    radius
+  );
+  glow.addColorStop(0, setAlpha(colorByAge(Math.min(avgAges, 100)), alphaByAge(avgAges)));
+  glow.addColorStop(1, 'transparent');
+
+  ctx.fillStyle = glow;
+
+  const circle = new Path2D();
+  circle.arc(
+    (x * cellSize) + (cellSize / 2),
+    (y * cellSize) + (cellSize / 2),
+    radius,
+    0,
+    Math.PI * 2
+  );
+  ctx.fill(circle);
 };
 
 const drawGlow = (currBuffer, canvas, cellSize) => {
@@ -33,30 +64,7 @@ const drawGlow = (currBuffer, canvas, cellSize) => {
   currBuffer.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
-        const avgAges = averageAges(cell.age, cell.neighbors);
-        const radius = getRadius(avgAges, cellSize);
-        const glow = ctx.createRadialGradient(
-          (x * cellSize) + (cellSize / 2),
-          (y * cellSize) + (cellSize / 2),
-          0,
-          (x * cellSize) + (cellSize / 2),
-          (y * cellSize) + (cellSize / 2),
-          radius
-        );
-        glow.addColorStop(0, setAlpha(colorByAge(Math.min(avgAges, 100)), alphaByAge(avgAges)));
-        glow.addColorStop(1, 'transparent');
-
-        ctx.fillStyle = glow;
-
-        const circle = new Path2D();
-        circle.arc(
-          (x * cellSize) + (cellSize / 2),
-          (y * cellSize) + (cellSize / 2),
-          radius,
-          0,
-          Math.PI * 2
-        );
-        ctx.fill(circle);
+        drawGlowCircle(ctx, x, y, cellSize, cell);
       }
     });
   });
@@ -67,10 +75,13 @@ const drawGrid = (canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
 
   ctx.strokeStyle = 'black';
+
+  // outer border
   ctx.lineWidth = Math.min(cellSize / 4, 2);
   ctx.strokeRect(0, 0, canvas.width, canvas.height);
-  ctx.lineWidth = Math.min(cellSize / 10, 0.5);
 
+  // grid lines
+  ctx.lineWidth = Math.min(cellSize / 10, 0.5);
   // draw vertical lines, spaced by the cellSize
   ctx.beginPath();
   let currentX = cellSize;
