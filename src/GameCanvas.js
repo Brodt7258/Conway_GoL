@@ -1,6 +1,7 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import clamp from 'clamp';
 
+import Controls from './Controls';
 import useCellCanvas from './useCellCanvas';
 import { genBGDivGradient } from './util/colorUtil';
 import useInterval from './util/useInterval';
@@ -106,61 +107,10 @@ const GameCanvas = () => {
           className="canvas"
         />
       </div>
-      <div className="controls">
-        <p>{generation}</p>
-        <button
-          type="button"
-          onClick={clear}
-        >
-          clear
-        </button>
-        <button
-          type="button"
-          onClick={randomize}
-        >
-          randomize
-        </button>
-        <button
-          type="button"
-          onClick={incrementGen}
-          disabled={runningDelay}
-        >
-          step
-        </button>
-        <button
-          type="button"
-          onClick={toggleRunning}
-        >
-          {runningDelay ? 'pause' : 'play'}
-        </button>
-        <button
-          type="button"
-          onClick={() => changeSpeed(false)}
-        >
-          -
-        </button>
-        <span>{selectedDelay}</span>
-        <button
-          type="button"
-          onClick={() => changeSpeed(true)}
-        >
-          +
-        </button>
-        <div>
-          <div>
-            <label htmlFor="density">
-              Density:
-              <input name="density" type="text" onChange={(e) => setDensity(e.target.value)} value={density} />
-            </label>
-          </div>
-          <div>
-            <label htmlFor="seed">
-              Seed:
-              <input name="seed" type="text" onChange={(e) => setSeed(e.target.value)} value={seed} />
-            </label>
-          </div>
-        </div>
-      </div>
+      <Controls
+        data={{ generation, runningDelay, selectedDelay, density, seed }}
+        handlers={{ clear, randomize, incrementGen, toggleRunning, changeSpeed, setDensity, setSeed }}
+      />
     </div>
   );
 };
