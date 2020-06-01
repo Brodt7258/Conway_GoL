@@ -1,11 +1,11 @@
 import { useRef, useCallback } from 'react';
-import { averageAges, colorByAge } from './util/colorUtil';
+import clamp from 'clamp';
+
+import { averageAges, colorByAge, setAlpha } from './util/colorUtil';
 
 // iterate over the whole buffer and draw all live cells
-const drawState = (gameBuffer, canvas, cellSize) => {
+const drawCells = (gameBuffer, canvas, cellSize) => {
   const ctx = canvas.getContext('2d');
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
   gameBuffer.forEach((row, y) => {
     row.forEach((cell, x) => {
       if (cell) {
@@ -14,6 +14,94 @@ const drawState = (gameBuffer, canvas, cellSize) => {
       }
     });
   });
+};
+
+const getRadius = (age, cellSize) => {
+  const rad = (cellSize * 6) / (Math.log(Math.max(age, 1)) * 0.3);
+  return clamp(rad, cellSize * 3, cellSize * 6);
+};
+
+const alphaByAge = (age) => {
+  const alpha = Math.log(Math.min(age, 1));
+  return clamp(alpha, 0.2, 1);
+};
+
+const drawGlow = (currBuffer, canvas, cellSize) => {
+  const ctx = canvas.getContext('2d');
+  ctx.globalCompositeOperation = 'screen';
+
+  currBuffer.forEach((row, y) => {
+    row.forEach((cell, x) => {
+      if (cell) {
+        const avgAges = averageAges(cell.age, cell.neighbors);
+        const radius = getRadius(avgAges, cellSize);
+        const glow = ctx.createRadialGradient(
+          (x * cellSize) + (cellSize / 2),
+          (y * cellSize) + (cellSize / 2),
+          0,
+          (x * cellSize) + (cellSize / 2),
+          (y * cellSize) + (cellSize / 2),
+          radius
+        );
+        glow.addColorStop(0, setAlpha(colorByAge(Math.min(avgAges, 100)), alphaByAge(avgAges)));
+        glow.addColorStop(1, 'transparent');
+
+        ctx.fillStyle = glow;
+
+        const circle = new Path2D();
+        circle.arc(
+          (x * cellSize) + (cellSize / 2),
+          (y * cellSize) + (cellSize / 2),
+          radius,
+          0,
+          Math.PI * 2
+        );
+        ctx.fill(circle);
+      }
+    });
+  });
+  ctx.globalCompositeOperation = 'source-over';
+};
+
+const drawGrid = (canvas, cellSize) => {
+  const ctx = canvas.getContext('2d');
+
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = Math.min(cellSize / 4, 2);
+  ctx.strokeRect(0, 0, canvas.width, canvas.height);
+  ctx.lineWidth = Math.min(cellSize / 10, 0.5);
+
+  // draw vertical lines, spaced by the cellSize
+  ctx.beginPath();
+  let currentX = cellSize;
+  ctx.moveTo(0, 0);
+  ctx.lineTo(0, canvas.height);
+  ctx.moveTo(currentX, 0);
+  while (currentX <= canvas.width) {
+    ctx.lineTo(currentX, canvas.height);
+    currentX += cellSize;
+    ctx.moveTo(currentX, 0);
+  }
+  ctx.stroke();
+
+  // draw horizontal lines, spaced by the cellSize
+  ctx.beginPath();
+  let currentY = cellSize;
+  ctx.moveTo(0, 0);
+  ctx.lineTo(canvas.width, 0);
+  ctx.moveTo(0, currentY);
+  while (currentY <= canvas.height) {
+    ctx.lineTo(canvas.width, currentY);
+    currentY += cellSize;
+    ctx.moveTo(0, currentY);
+  }
+  ctx.stroke();
+};
+
+
+const clearCanvas = (canvas) => {
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
 };
 
 const useCellCanvas = (cellSize) => {
@@ -30,7 +118,10 @@ const useCellCanvas = (cellSize) => {
   };
 
   const reDraw = useCallback((buffer) => {
-    drawState(buffer, canvasRef.current, cellSize);
+    clearCanvas(canvasRef.current);
+    drawGlow(buffer, canvasRef.current, cellSize);
+    drawCells(buffer, canvasRef.current, cellSize);
+    drawGrid(canvasRef.current, cellSize);
   }, [cellSize]);
 
   return [
