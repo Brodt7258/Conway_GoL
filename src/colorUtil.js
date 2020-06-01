@@ -2,7 +2,7 @@ import colorInterpolate from 'color-interpolate';
 
 // use neighboring cell ages for calculating cell color (but emphasize this cell's age)
 export const averageAges = (age, neighbors) => {
-  const avg = neighbors.reduce((acc, e) => acc + Math.min(e, 300), age * 2) / (neighbors.length + 2);
+  const avg = (Math.min(age, 300) + neighbors) / 2;
   return avg;
 };
 

@@ -1,11 +1,12 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import clamp from 'clamp';
 
-import useDoubleBuffer from './useDoubleBuffer';
+// import useDoubleBuffer from './useDoubleBuffer';
 import useCellCanvas from './useCellCanvas';
-import useGridCanvas from './useGridCanvas';
-import useBGGlowCanvas from './useBGGlowCanvas';
+// import useGridCanvas from './useGridCanvas';
+// import useBGGlowCanvas from './useBGGlowCanvas';
 import { glowByLiveCount, setAlpha } from './colorUtil';
+import { initBuffers, advanceGameState, getCurrentBuffer, initRandom } from './state/buffers';
 
 const GameCanvas = () => {
   const [generation, setGeneration] = useState(0);
@@ -13,7 +14,7 @@ const GameCanvas = () => {
   const [xQuantity] = useState(50);
   const [yQuantity, setYQuantity] = useState(0);
   const [cellSize, setCellSize] = useState(10);
-  const [liveCount, setLiveCount] = useState(0);
+  const [liveCount] = useState(0);
 
   const [running, setRunning] = useState(null);
   const [intervalTime, setIntervalTime] = useState(300);
@@ -22,18 +23,18 @@ const GameCanvas = () => {
   const [density, setDensity] = useState(0.2);
 
   const containerRef = useRef(null);
+  const currBuffer = useRef([]);
 
-  // setup the logic for my buffers and canvases
-  const {
-    currBuffer,
-    mutateCurrent,
-    updateNextBuffer,
-    genRandomMatrix,
-    clearMatrix
-  } = useDoubleBuffer(generation, xQuantity, yQuantity, setLiveCount);
-  const [cellCanvasRef, mapPixelToCell, toggleRect] = useCellCanvas(currBuffer, cellSize);
-  const [gridCanvasRef] = useGridCanvas(cellSize);
-  const [glowRef] = useBGGlowCanvas(currBuffer, cellSize);
+  const [cellCanvasRef, , , reDraw] = useCellCanvas(cellSize);
+
+  useEffect(() => {
+    initBuffers(yQuantity, xQuantity);
+  }, [xQuantity, yQuantity]);
+
+  useEffect(() => {
+    advanceGameState();
+    reDraw(getCurrentBuffer());
+  }, [generation, reDraw]);
 
   // size the canvases to fit the container div
   const [derivedHeight, setDerivedHeight] = useState(0);
@@ -41,8 +42,6 @@ const GameCanvas = () => {
     const { height, width } = containerRef.current.getBoundingClientRect();
 
     cellCanvasRef.current.width = width;
-    gridCanvasRef.current.width = width;
-    glowRef.current.width = width;
 
     const derivedCellSize = width / xQuantity;
     const derivedYQuantity = Math.floor(height / derivedCellSize);
@@ -50,7 +49,7 @@ const GameCanvas = () => {
 
     setCellSize(derivedCellSize);
     setYQuantity(derivedYQuantity);
-  }, [xQuantity, containerRef, cellCanvasRef, gridCanvasRef, glowRef]);
+  }, [xQuantity, containerRef, cellCanvasRef]);
 
   const [gradient, setGradient] = useState('');
   // build a gradient based on liveCount, and positioned behind the canvas container
@@ -70,11 +69,11 @@ const GameCanvas = () => {
   };
 
   const handleCanvasClick = (e) => {
-    const [row, col] = mapPixelToCell(e.clientX, e.clientY);
-    const cell = currBuffer[row][col];
-    mutateCurrent(row, col);
-    toggleRect(cell, col, row);
-    updateNextBuffer();
+    // const [row, col] = mapPixelToCell(e.clientX, e.clientY);
+    // const cell = currBuffer[row][col];
+    // mutateCurrent(row, col);
+    // toggleRect(cell, col, row);
+    // updateNextBuffer();
   };
 
   const stopRunning = () => {
@@ -95,13 +94,17 @@ const GameCanvas = () => {
   const randomize = () => {
     stopRunning();
     setGeneration(0);
-    genRandomMatrix(seed, density);
+    // genRandomMatrix(seed, density);
+    initRandom(yQuantity, xQuantity, density, seed);
+    currBuffer.current = getCurrentBuffer();
+    reDraw(getCurrentBuffer());
   };
 
   const clear = () => {
     stopRunning();
     setGeneration(0);
-    clearMatrix();
+    initBuffers(yQuantity, xQuantity);
+    reDraw(getCurrentBuffer());
   };
 
   useEffect(() => {
@@ -132,9 +135,14 @@ const GameCanvas = () => {
   return (
     <div className="root-container" style={{ backgroundColor: '#030c21', backgroundImage: gradient }}>
       <div ref={containerRef} className="canvas-container">
-        <canvas ref={glowRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-2" />
-        <canvas ref={cellCanvasRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-3" />
-        <canvas ref={gridCanvasRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-4" />
+        {/* <canvas ref={glowRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-2" /> */}
+        <canvas
+          ref={cellCanvasRef}
+          height={derivedHeight}
+          onClick={handleCanvasClick}
+          className="canvas index-3"
+        />
+        {/* <canvas ref={gridCanvasRef} height={derivedHeight} onClick={handleCanvasClick} className="canvas index-4" /> */}
       </div>
       <div className="controls index-2">
         <p>{generation}</p>

@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useCallback } from 'react';
 import { averageAges, colorByAge } from './colorUtil';
 
 // iterate over the whole buffer and draw all live cells
@@ -27,13 +27,8 @@ const toggleRect = (canvas, cellSize, cell, x, y) => {
   }
 };
 
-const useCellCanvas = (currBuffer, cellSize) => {
+const useCellCanvas = (cellSize) => {
   const canvasRef = useRef(null);
-
-  // any time the buffer is switched, automatically redraw the canvas with new state
-  useEffect(() => {
-    drawState(currBuffer, canvasRef.current, cellSize);
-  }, [currBuffer, cellSize]);
 
   // helper, determines which cell a set of coords is located in (used for clicks)
   const mapPixelToCell = (x, y) => {
@@ -45,10 +40,15 @@ const useCellCanvas = (currBuffer, cellSize) => {
     return [row, col];
   };
 
+  const reDraw = useCallback((buffer) => {
+    drawState(buffer, canvasRef.current, cellSize);
+  }, [cellSize]);
+
   return [
     canvasRef,
     mapPixelToCell,
-    (cell, x, y) => toggleRect(canvasRef.current, cellSize, cell, x, y)
+    (cell, x, y) => toggleRect(canvasRef.current, cellSize, cell, x, y),
+    reDraw
   ];
 };
 
