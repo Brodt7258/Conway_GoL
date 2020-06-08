@@ -62,4 +62,46 @@ html, body {
 
 .controls {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 2rem;
 }
+
+.slider-grp {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.slider-grp > * {
+  margin: 0.5rem;
+}
+
+.light {
+  color: #e0e0e0;
+}
+
+.counter-display {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+  margin: 1rem 0;
+}
+
+/* .slider-grp > .MuiButton-root {
+  padding: 6px;
+  min-width: 26px;
+} */
+
+/* .button-controls {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+} */
+
+/* .btn-ctrl {
+
+} */

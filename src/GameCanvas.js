@@ -111,7 +111,7 @@ const GameCanvas = () => {
         />
       </div>
       <Controls
-        data={{ generation, runningDelay, selectedSpeed, density, seed }}
+        data={{ generation, runningDelay, selectedSpeed, density, seed, liveCount }}
         handlers={{ clear, randomize, incrementGen, toggleRunning, changeSpeed, setDensity, setSeed }}
       />
     </div>

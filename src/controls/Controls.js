@@ -1,52 +1,90 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Slider } from '@material-ui/core';
-import IconButton from '@material-ui/core/IconButton';
-import { ClearRounded, ShuffleRounded, SkipNextRounded, PlayArrowRounded, PauseRounded } from '@material-ui/icons';
+import { Slider, Button, ButtonGroup } from '@material-ui/core';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faRandom,
+  faTimes,
+  faStepForward,
+  faPlay,
+  faPause,
+  faCog,
+  faPlus,
+  faMinus
+} from '@fortawesome/free-solid-svg-icons';
+
+import CounterDisplay from './CounterDisplay';
 
 const Controls = ({ data, handlers }) => {
   return (
     <div className="controls">
-      <p>{handlers.generation}</p>
-      <div>
-        <IconButton
+      <CounterDisplay
+        live={data.liveCount}
+        gen={data.generation}
+      />
+      <ButtonGroup
+        className="button-controls"
+        variant="contained"
+        fullWidth
+      >
+        <Button
+          className="btn-ctrl"
           type="button"
           onClick={handlers.clear}
         >
-          <ClearRounded />
-        </IconButton>
-        <IconButton
+          <FontAwesomeIcon icon={faTimes} />
+        </Button>
+        <Button
+          className="btn-ctrl"
+        >
+          <FontAwesomeIcon icon={faCog} />
+        </Button>
+        <Button
+          className="btn-ctrl"
           type="button"
           onClick={handlers.randomize}
         >
-          <ShuffleRounded />
-        </IconButton>
-        <IconButton
-          type="button"
-          onClick={handlers.incrementGen}
-          disabled={Boolean(data.runningDelay)}
-        >
-          <SkipNextRounded />
-        </IconButton>
-        <IconButton
+          <FontAwesomeIcon icon={faRandom} />
+        </Button>
+        <Button
+          className="btn-ctrl"
           type="button"
           onClick={handlers.toggleRunning}
         >
-          {data.runningDelay ? <PauseRounded /> : <PlayArrowRounded />}
-        </IconButton>
+          {data.runningDelay ? <FontAwesomeIcon icon={faPause} /> : <FontAwesomeIcon icon={faPlay} />}
+        </Button>
+        <Button
+          className="btn-ctrl"
+          type="button"
+          onClick={handlers.incrementGen}
+        >
+          <FontAwesomeIcon icon={faStepForward} />
+        </Button>
+      </ButtonGroup>
+      <div className="slider-grp">
+        <FontAwesomeIcon
+          onClick={() => handlers.changeSpeed(1)}
+          icon={faMinus}
+          className="light"
+        />
+        <Slider
+          defaultValue={10}
+          getAriaValueText={() => data.selectedSpeed}
+          aria-labelledby="discrete-slider"
+          valueLabelDisplay="auto"
+          step={1}
+          marks
+          min={1}
+          max={20}
+          value={data.selectedSpeed}
+          onChange={(_, val) => handlers.changeSpeed(val)}
+        />
+        <FontAwesomeIcon
+          onClick={() => handlers.changeSpeed(20)}
+          icon={faPlus}
+          className="light"
+        />
       </div>
-      <Slider
-        defaultValue={30}
-        getAriaValueText={() => data.selectedSpeed}
-        aria-labelledby="discrete-slider"
-        valueLabelDisplay="auto"
-        step={1}
-        marks
-        min={1}
-        max={20}
-        value={data.selectedSpeed}
-        onChange={(_, val) => handlers.changeSpeed(val)}
-      />
     </div>
   );
 };
@@ -58,7 +96,8 @@ Controls.propTypes = {
     runningDelay: PropTypes.number,
     selectedSpeed: PropTypes.number,
     density: PropTypes.number,
-    seed: PropTypes.string
+    seed: PropTypes.string,
+    liveCount: PropTypes.number
   }).isRequired
 };
 
