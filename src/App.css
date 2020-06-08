@@ -49,7 +49,6 @@ html, body {
   overflow-x: hidden;
   position: absolute;
   padding: 5%;
-  padding-bottom: 5rem;
   display: flex;
   flex-direction: column;
 }

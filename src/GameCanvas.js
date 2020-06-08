@@ -1,7 +1,7 @@
 import React, { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import clamp from 'clamp';
 
-import Controls from './Controls';
+import Controls from './controls/Controls';
 import useCellCanvas from './useCellCanvas';
 import { genBGDivGradient } from './util/colorUtil';
 import useInterval from './util/useInterval';
@@ -49,7 +49,7 @@ const GameCanvas = () => {
     setGeneration((prev) => prev + 1);
   };
 
-  const [selectedDelay, setSelectedDelay] = useState(150);
+  const [selectedSpeed, setSelectedSpeed] = useState(10);
   const [runningDelay, setRunningDelay] = useState(null);
   useInterval(incrementGen, runningDelay);
 
@@ -63,12 +63,11 @@ const GameCanvas = () => {
     setRunningDelay(null);
   };
 
-  // setup an interval for game updates
   const toggleRunning = () => {
     if (runningDelay) {
       stopRunning();
     } else {
-      setRunningDelay(selectedDelay);
+      setRunningDelay(deriveDelay(selectedSpeed));
     }
   };
 
@@ -89,9 +88,13 @@ const GameCanvas = () => {
     reDraw(getCurrentBuffer());
   };
 
-  const changeSpeed = (faster) => {
-    const newDelay = clamp(selectedDelay + (faster ? -50 : 50), 50, 2000);
-    setSelectedDelay(newDelay);
+  const deriveDelay = (speed) => {
+    return clamp(1050 - (speed * 50), 50, 1000);
+  };
+
+  const changeSpeed = (speed) => {
+    const newDelay = deriveDelay(speed);
+    setSelectedSpeed(speed);
     if (runningDelay) {
       setRunningDelay(newDelay);
     }
@@ -108,7 +111,7 @@ const GameCanvas = () => {
         />
       </div>
       <Controls
-        data={{ generation, runningDelay, selectedDelay, density, seed }}
+        data={{ generation, runningDelay, selectedSpeed, density, seed }}
         handlers={{ clear, randomize, incrementGen, toggleRunning, changeSpeed, setDensity, setSeed }}
       />
     </div>
