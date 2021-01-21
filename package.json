@@ -13,7 +13,7 @@
     "@testing-library/user-event": "^7.1.2",
     "clamp": "^1.0.1",
     "color-interpolate": "^1.0.5",
-    "immer": "^6.0.9",
+    "immer": "^8.0.1",
     "prop-types": "^15.7.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
